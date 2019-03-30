@@ -7,20 +7,11 @@ namespace RetroArchPlaylistGenerator
 {
     public class RADatabaseEntry
     {
-        private const byte EntryStartByte = 0x80;
-
-        public byte[] CRC;
-        public string Description;
-        public string Franchise;
-        public byte[] MD5;
         public string Name;
         public string RomName;
-        public byte[] SHA1;
-        public ulong Size;
 
         public RADatabaseEntry(Stream stream)
         {
-            //name
             var entryStartByte = stream.ReadByte();
 
             if (entryStartByte >= 0x90)
@@ -43,27 +34,15 @@ namespace RetroArchPlaylistGenerator
                     case "name":
                         Name = value;
                         break;
-                    case "description":
-                        Description = value;
-                        break;
                     case "rom_name":
                         RomName = value;
                         break;
-                    case "size":
-                        Size = value;
-                        break;
-                    case "franchise":
-                        Franchise = value;
-                        break;
-                    case "crc":
-                        CRC = value;
-                        break;
-                    case "md5":
-                        MD5 = value;
-                        break;
-                    case "sha1":
-                        SHA1 = value;
-                        break;
+                    //case "description":
+                    //case "size":
+                    //case "franchise":
+                    //case "crc":
+                    //case "md5":
+                    //case "sha1":
                     //case "releasemonth":
                     //case "releaseyear":
                     //case "developer":

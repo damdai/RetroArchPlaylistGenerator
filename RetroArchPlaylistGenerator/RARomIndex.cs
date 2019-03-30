@@ -41,6 +41,7 @@ namespace RetroArchPlaylistGenerator
                 {
                     var doc = new Document();
                     doc.Add(new Field("Name", dbEntry.Name, Field.Store.YES, Field.Index.ANALYZED));
+                    doc.Add(new Field("RomName", dbEntry.RomName, Field.Store.YES, Field.Index.NOT_ANALYZED));
                     writer.AddDocument(doc);
                 }
 
@@ -65,14 +66,27 @@ namespace RetroArchPlaylistGenerator
             }
         }
 
-        public List<(string Name, float Score)> GetRom(string romName)
+        public List<(string Name, float Score)> GetRom(string romFileName)
         {
-            var parser = new QueryParser(Version.LUCENE_30, "Name", _analyzer);
-            var query = parser.Parse(Regex.Replace(romName, @"( \- )|[^a-z0-9'\-]", " ", RegexOptions.IgnoreCase));
             var collector = TopScoreDocCollector.Create(10, true);
-            _searcher.Search(query, collector);
+
+            //First, match on RomName.
+            var query1 = new TermQuery(new Term("RomName", romFileName));
+            _searcher.Search(query1, collector);
             var hits = collector.TopDocs().ScoreDocs;
-            var docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score));
+            var docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score)).Where(h => h.Score > 1);
+
+            if (!docs.Any())
+            {
+                //If not found, match on Name.
+                var parser = new QueryParser(Version.LUCENE_30, "Name", _analyzer);
+                var query2 = parser.Parse(Regex.Replace(Path.GetFileNameWithoutExtension(romFileName),
+                    @"( \- )|[^a-z0-9'\-]", " ", RegexOptions.IgnoreCase));
+                _searcher.Search(query2, collector);
+                hits = collector.TopDocs().ScoreDocs;
+                docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score));
+            }
+
             return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, Score: d.Score)).OrderByDescending(d => d.Score).ThenBy(d => d.Name).ToList();
         }
 

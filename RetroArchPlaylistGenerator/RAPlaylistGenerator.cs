@@ -57,7 +57,7 @@ namespace RetroArchPlaylistGenerator
 
         private static string SelectRom(string romPath, RARomIndex index)
         {
-            var matches = index.GetRom(Path.GetFileNameWithoutExtension(romPath));
+            var matches = index.GetRom(Path.GetFileName(romPath));
 
             if (!matches.Any())
                 return null;

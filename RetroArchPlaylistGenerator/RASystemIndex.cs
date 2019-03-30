@@ -60,7 +60,7 @@ namespace RetroArchPlaylistGenerator
                         var nameParser = new QueryParser(Version.LUCENE_30, "Name", analyzer);
                         var nameQuery = nameParser.Parse(Regex.Replace(query,
                             @"[^a-z0-9!']", " ", RegexOptions.IgnoreCase));
-                        var collector = TopScoreDocCollector.Create(3, true);
+                        var collector = TopScoreDocCollector.Create(10, true);
                         searcher.Search(nameQuery, collector);
                         var hits = collector.TopDocs().ScoreDocs;
                         var docs = hits.Select(h => (Doc: searcher.Doc(h.Doc), Score: h.Score));
