@@ -18,16 +18,16 @@ namespace RetroArchPlaylistGenerator
     {
         private const string IndexLocation = @".\Index\Systems";
 
-        public RASystemIndex(string retroarchFolderPath)
+        public RASystemIndex(string retroarchInstallPath)
         {
-            GenerateIndex(retroarchFolderPath);
+            GenerateIndex(retroarchInstallPath);
         }
 
-        private static void GenerateIndex(string retroarchFolderPath)
+        private static void GenerateIndex(string retroarchInstallPath)
         {
             Console.WriteLine("Generating system index...");
             Helpers.DeleteFilesInFolder(IndexLocation);
-            var dbDir = $@"{retroarchFolderPath}\database\rdb\";
+            var dbDir = $@"{retroarchInstallPath}\database\rdb\";
 
             using (var indexOutputDir = FSDirectory.Open(IndexLocation))
             {

@@ -14,16 +14,16 @@ namespace RetroArchPlaylistGenerator
             {
                 {
                     "ra=|retroarch=", "The path to the RetroArch install directory.",
-                    v => options.RetroArchFolderPath = v
+                    v => options.RetroArchInstallDirectoryPath = v
                 },
                 {
                     "ro=|roms=", "The path to the folder containing the ROMs that you want to generate a playlist of.",
-                    v => options.RomsFolderPath = v
+                    v => options.RomsDirectoryPath = v
                 },
                 {
                     "r|rename",
                     "If set, will rename the ROM folder to match the RetroArch system name.",
-                    v => options.RenameRoms = true
+                    v => options.Rename = true
                 },
                 {"h|?|help", v => options.Help = true}
             };
@@ -43,8 +43,8 @@ namespace RetroArchPlaylistGenerator
                 return;
             }
 
-            var systemIndex = new RASystemIndex(options.RetroArchFolderPath);
-            var romFolderName = new DirectoryInfo(options.RomsFolderPath).Name;
+            var systemIndex = new RASystemIndex(options.RetroArchInstallDirectoryPath);
+            var romFolderName = new DirectoryInfo(options.RomsDirectoryPath).Name;
             var systemName = SelectSystem(systemIndex, romFolderName);
 
             if (systemName == null)
@@ -53,15 +53,15 @@ namespace RetroArchPlaylistGenerator
                 return;
             }
 
-            using (var romIndex = new RARomIndex($@"{options.RetroArchFolderPath}\database\rdb\{systemName}.rdb"))
+            using (var romIndex = new RARomIndex($@"{options.RetroArchInstallDirectoryPath}\database\rdb\{systemName}.rdb"))
             {
                 var playlistGenerator = new RAPlaylistGenerator();
                 playlistGenerator.GeneratePlaylist(
                     systemName, 
-                    options.RomsFolderPath,
-                    $@"{options.RetroArchFolderPath}\playlists\",
+                    options.RomsDirectoryPath,
+                    $@"{options.RetroArchInstallDirectoryPath}\playlists\",
                     romIndex,
-                    options.RenameRoms);
+                    options.Rename);
             }
         }
 
@@ -96,9 +96,9 @@ namespace RetroArchPlaylistGenerator
 
         public class Options
         {
-            public string RetroArchFolderPath;
-            public string RomsFolderPath;
-            public bool RenameRoms;
+            public string RetroArchInstallDirectoryPath;
+            public string RomsDirectoryPath;
+            public bool Rename;
             public bool Help;
         }
     }

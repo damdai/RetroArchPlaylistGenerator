@@ -9,7 +9,6 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using Directory = System.IO.Directory;
 using Version = Lucene.Net.Util.Version;
 
 namespace RetroArchPlaylistGenerator
@@ -18,13 +17,20 @@ namespace RetroArchPlaylistGenerator
     {
         private const string IndexLocation = @".\Index\Roms";
 
+        private StandardAnalyzer _analyzer;
         private FSDirectory _indexDir;
         private IndexSearcher _searcher;
-        private StandardAnalyzer _analyzer;
 
         public RARomIndex(string rdbFilePath)
         {
             GenerateIndex(rdbFilePath);
+        }
+
+        public void Dispose()
+        {
+            _indexDir?.Dispose();
+            _searcher?.Dispose();
+            _analyzer?.Dispose();
         }
 
         private void GenerateIndex(string rdbFilePath)
@@ -41,7 +47,10 @@ namespace RetroArchPlaylistGenerator
                 {
                     var doc = new Document();
                     doc.Add(new Field("Name", dbEntry.Name, Field.Store.YES, Field.Index.ANALYZED));
-                    doc.Add(new Field("RomName", dbEntry.RomName, Field.Store.YES, Field.Index.NOT_ANALYZED));
+
+                    if (dbEntry.RomName != null)
+                        doc.Add(new Field("RomName", dbEntry.RomName, Field.Store.YES, Field.Index.NOT_ANALYZED));
+
                     writer.AddDocument(doc);
                 }
 
@@ -87,14 +96,8 @@ namespace RetroArchPlaylistGenerator
                 docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score));
             }
 
-            return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, Score: d.Score)).OrderByDescending(d => d.Score).ThenBy(d => d.Name).ToList();
-        }
-
-        public void Dispose()
-        {
-            _indexDir?.Dispose();
-            _searcher?.Dispose();
-            _analyzer?.Dispose();
+            return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, Score: d.Score))
+                .OrderByDescending(d => d.Score).ThenBy(d => d.Name).ToList();
         }
     }
 }
