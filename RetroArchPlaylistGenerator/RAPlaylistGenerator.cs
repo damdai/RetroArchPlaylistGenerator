@@ -15,9 +15,16 @@ namespace RetroArchPlaylistGenerator
             if (rename)
             {
                 var newRomFolderPath = $@"{new DirectoryInfo(romFolderPath).Parent.FullName}\{systemName}";
-                Directory.Move(romFolderPath, newRomFolderPath);
-                romFolderPath = newRomFolderPath;
+                romFolderPath = romFolderPath.TrimEnd('\\');
+
+                if (!newRomFolderPath.Equals(romFolderPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Directory.Move(romFolderPath, newRomFolderPath);
+                    romFolderPath = newRomFolderPath;
+                }
             }
+
+            string previousRomName = null;
 
             foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi))$"))
             {
@@ -28,6 +35,9 @@ namespace RetroArchPlaylistGenerator
                     Console.WriteLine($"Matching ROM not found for file: {Path.GetFileName(romPath)}");
                     continue;
                 }
+
+                if (romName == previousRomName)
+                    continue;
 
                 Console.WriteLine($"Matched: {Path.GetFileName(romPath)} => {romName}");
                 var entry = new RAPlaylistEntry
@@ -40,14 +50,19 @@ namespace RetroArchPlaylistGenerator
                     db_name = $"{systemName}.lpl"
                 };
 
-                //if (rename)
-                //{
-                //    var newRomPath = $@"{Path.GetDirectoryName(romPath)}\{romName}{Path.GetExtension(romPath)}";
-                //    File.Move(romPath, newRomPath);
-                //    entry.path = newRomPath;
-                //}
+                if (rename)
+                {
+                    var newRomPath = $@"{Path.GetDirectoryName(romPath)}\{romName}{Path.GetExtension(romPath)}";
+
+                    if (!newRomPath.Equals(romPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Move(romPath, newRomPath);
+                        entry.path = newRomPath;
+                    }
+                }
 
                 playlist.items.Add(entry);
+                previousRomName = romName;
             }
 
             playlist.items = playlist.items.OrderBy(i => i.label).ToList();
