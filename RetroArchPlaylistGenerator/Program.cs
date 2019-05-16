@@ -13,15 +13,15 @@ namespace RetroArchPlaylistGenerator
             var optionSet = new OptionSet
             {
                 {
-                    "ra=|retroarch=", "The path to the RetroArch install directory.",
+                    "i=|install=", "The path to the RetroArch install directory.",
                     v => options.RetroArchInstallDirectoryPath = v
                 },
                 {
-                    "ro=|roms=", "The path to the folder containing the ROMs that you want to generate a playlist of.",
+                    "r=|roms=", "The path to the folder containing the ROMs that you want to generate a playlist of.",
                     v => options.RomsDirectoryPath = v
                 },
                 {
-                    "r|rename",
+                    "rename",
                     "If set, will rename the ROM folder to match the RetroArch system name.",
                     v => options.Rename = true
                 },
