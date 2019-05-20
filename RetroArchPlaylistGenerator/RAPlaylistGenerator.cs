@@ -28,18 +28,15 @@ namespace RetroArchPlaylistGenerator
 
             foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi))$"))
             {
-                var romName = SelectRom(romPath, romIndex);
-
-                if (romName == null)
-                {
-                    Console.WriteLine($"Matching ROM not found for file: {Path.GetFileName(romPath)}");
-                    continue;
-                }
+                var matched = SelectRom(romPath, romIndex, out var romName);
 
                 if (romName == previousRomName)
                     continue;
 
-                Console.WriteLine($"Matched: {Path.GetFileName(romPath)} => {romName}");
+                Console.WriteLine(!matched
+                    ? $"Matching ROM not found for file: {Path.GetFileName(romPath)}"
+                    : $"Matched: {Path.GetFileName(romPath)} => {romName}");
+
                 var entry = new RAPlaylistEntry
                 {
                     path = romPath,
@@ -70,18 +67,22 @@ namespace RetroArchPlaylistGenerator
                 JsonConvert.SerializeObject(playlist, Formatting.Indented).Replace("\r\n", "\n"));
         }
 
-        private static string SelectRom(string romPath, RARomIndex index)
+        private static bool SelectRom(string romPath, RARomIndex index, out string romName)
         {
-            var matches = index.GetRom(Path.GetFileName(romPath));
+            var fileName = romName = Path.GetFileNameWithoutExtension(romPath);
+            var matches = index.GetRom(fileName).Where(r => r.Score > .1f).ToList();
 
             if (!matches.Any())
-                return null;
+                return false;
 
             if (matches.First().Score >= 1)
-                return matches.First().Name;
+            {
+                romName = matches.First().Name;
+                return true;
+            }
 
             Console.WriteLine();
-            Console.WriteLine($"Multiple possible ROM matches found for file: {Path.GetFileName(romPath)}");
+            Console.WriteLine($"Possible matches for file: {fileName}");
             Console.WriteLine();
 
             for (var i = 0; i < matches.Count; ++i)
@@ -96,7 +97,11 @@ namespace RetroArchPlaylistGenerator
                 var input = Console.ReadLine();
 
                 if (int.TryParse(input, out var optionIndex) && optionIndex > 0 && optionIndex <= matches.Count + 1)
-                    return optionIndex - 1 >= matches.Count ? null : matches[optionIndex - 1].Name;
+                {
+                    var none = optionIndex - 1 >= matches.Count;
+                    romName = none ? fileName : matches[optionIndex - 1].Name;
+                    return !none;
+                }
             }
         }
     }

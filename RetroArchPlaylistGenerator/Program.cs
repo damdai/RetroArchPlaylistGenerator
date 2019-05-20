@@ -75,7 +75,7 @@ namespace RetroArchPlaylistGenerator
             if (matches.First().Score >= 1)
                 return matches.First().Name;
 
-            Console.WriteLine("Multiple possible system matches found.");
+            Console.WriteLine("Possible system matches:");
             Console.WriteLine();
 
             for (var i = 0; i < matches.Count; ++i)
