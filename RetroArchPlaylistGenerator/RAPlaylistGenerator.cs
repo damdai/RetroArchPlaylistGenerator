@@ -26,7 +26,7 @@ namespace RetroArchPlaylistGenerator
 
             string previousRomName = null;
 
-            foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi))$"))
+            foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi)|(.wad))$"))
             {
                 var matched = SelectRom(romPath, romIndex, out var romName);
 
