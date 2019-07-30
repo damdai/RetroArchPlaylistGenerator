@@ -21,5 +21,16 @@ namespace RetroArchPlaylistGenerator
 
             Array.ForEach(Directory.GetFiles(path, "*.*"), File.Delete);
         }
+
+        internal static List<string> ParseCueFile(string cueFilePath)
+        {
+            var matches = Regex.Matches(File.ReadAllText(cueFilePath), "FILE \"(?<filename>.+)\"");
+            var list = new List<string>();
+
+            foreach (Match match in matches)
+                list.Add(match.Groups["filename"].Value);
+
+            return list;
+        }
     }
 }

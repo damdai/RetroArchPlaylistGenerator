@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace RetroArchPlaylistGenerator
@@ -25,18 +27,24 @@ namespace RetroArchPlaylistGenerator
             }
 
             string previousRomName = null;
+            var ignoreFiles = new List<string>();
 
-            foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi)|(.wad))$"))
+            foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi)|(.wad)|(.bin))$")
+                .OrderBy(f => Path.GetExtension(f).Equals(".bin", StringComparison.OrdinalIgnoreCase)))
             {
+                var filename = Path.GetFileName(romPath);
+
+                if (ignoreFiles.Exists(f => f.Equals(filename, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
                 var matched = SelectRom(romPath, romIndex, out var romName);
 
                 if (romName == previousRomName)
                     continue;
 
                 Console.WriteLine(!matched
-                    ? $"Matching ROM not found for file: {Path.GetFileName(romPath)}"
-                    : $"Matched: {Path.GetFileName(romPath)} => {romName}");
-
+                    ? $"Matching ROM not found for file: {filename}"
+                    : $"Matched: {filename} => {romName}");
                 var entry = new RAPlaylistEntry
                 {
                     path = romPath,
@@ -49,10 +57,19 @@ namespace RetroArchPlaylistGenerator
 
                 if (rename)
                 {
+                    foreach (var c in Path.GetInvalidFileNameChars())
+                        romName = romName.Replace(c.ToString(), null);
+
                     var newRomPath = $@"{Path.GetDirectoryName(romPath)}\{romName}{Path.GetExtension(romPath)}";
 
                     if (!newRomPath.Equals(romPath, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (File.Exists(newRomPath))
+                        {
+                            Console.WriteLine("Skipping file because a file with the same name already exists.");
+                            continue;
+                        }
+
                         File.Move(romPath, newRomPath);
                         entry.path = newRomPath;
                     }
@@ -60,6 +77,12 @@ namespace RetroArchPlaylistGenerator
 
                 playlist.items.Add(entry);
                 previousRomName = romName;
+
+                if (Path.GetExtension(filename).Equals(".cue", StringComparison.OrdinalIgnoreCase))
+                {
+                    var binFiles = Helpers.ParseCueFile(romPath);
+                    ignoreFiles.AddRange(binFiles);
+                }
             }
 
             playlist.items = playlist.items.OrderBy(i => i.label).ToList();

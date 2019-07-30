@@ -63,8 +63,8 @@ namespace RetroArchPlaylistGenerator
                         var collector = TopScoreDocCollector.Create(10, true);
                         searcher.Search(nameQuery, collector);
                         var hits = collector.TopDocs().ScoreDocs;
-                        var docs = hits.Select(h => (Doc: searcher.Doc(h.Doc), Score: h.Score));
-                        return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, Score: d.Score)).ToList();
+                        var docs = hits.Select(h => (Doc: searcher.Doc(h.Doc), h.Score));
+                        return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, d.Score)).ToList();
                     }
                 }
             }
