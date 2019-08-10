@@ -80,7 +80,7 @@ namespace RetroArchPlaylistGenerator
 
                 if (Path.GetExtension(filename).Equals(".cue", StringComparison.OrdinalIgnoreCase))
                 {
-                    var binFiles = Helpers.ParseCueFile(romPath);
+                    var binFiles = Helpers.ParseCueFile(entry.path);
                     ignoreFiles.AddRange(binFiles);
                 }
             }
