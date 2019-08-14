@@ -21,6 +21,10 @@ namespace RetroArchPlaylistGenerator
                     v => options.RomsDirectoryPath = v
                 },
                 {
+                    "s=|system=", "The name of the system the ROMs are for. If not specified, containing folder name will be used.",
+                    v => options.SystemName = v
+                },
+                {
                     "rename",
                     "If set, will rename the ROM folder to match the RetroArch system name.",
                     v => options.Rename = true
@@ -44,12 +48,12 @@ namespace RetroArchPlaylistGenerator
             }
 
             var systemIndex = new RASystemIndex(options.RetroArchInstallDirectoryPath);
-            var romFolderName = new DirectoryInfo(options.RomsDirectoryPath).Name;
-            var systemName = SelectSystem(systemIndex, romFolderName);
+            var systemName = options.SystemName ?? new DirectoryInfo(options.RomsDirectoryPath).Name;
+            systemName = SelectSystem(systemIndex, systemName);
 
             if (systemName == null)
             {
-                Console.WriteLine($"No system matches found for folder: {romFolderName}");
+                Console.WriteLine($"No system matches found for folder: {systemName}");
                 return;
             }
 
@@ -98,6 +102,7 @@ namespace RetroArchPlaylistGenerator
         {
             public string RetroArchInstallDirectoryPath;
             public string RomsDirectoryPath;
+            public string SystemName;
             public bool Rename;
             public bool Help;
         }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace RetroArchPlaylistGenerator
@@ -14,17 +13,17 @@ namespace RetroArchPlaylistGenerator
         {
             var playlist = new RAPlaylist();
 
-            if (rename)
-            {
-                var newRomFolderPath = $@"{new DirectoryInfo(romFolderPath).Parent.FullName}\{systemName}";
-                romFolderPath = romFolderPath.TrimEnd('\\');
+            //if (rename)
+            //{
+            //    var newRomFolderPath = $@"{new DirectoryInfo(romFolderPath).Parent.FullName}\{systemName}";
+            //    romFolderPath = romFolderPath.TrimEnd('\\');
 
-                if (!newRomFolderPath.Equals(romFolderPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    Directory.Move(romFolderPath, newRomFolderPath);
-                    romFolderPath = newRomFolderPath;
-                }
-            }
+            //    if (!newRomFolderPath.Equals(romFolderPath, StringComparison.OrdinalIgnoreCase))
+            //    {
+            //        Directory.Move(romFolderPath, newRomFolderPath);
+            //        romFolderPath = newRomFolderPath;
+            //    }
+            //}
 
             string previousRomName = null;
             var ignoreFiles = new List<string>();
