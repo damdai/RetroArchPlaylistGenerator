@@ -29,7 +29,8 @@ namespace RetroArchPlaylistGenerator
             var ignoreFiles = new List<string>();
 
             foreach (var romPath in Helpers.GetFiles(romFolderPath, "((.zip)|(.cue)|(.iso)|(.gdi)|(.cdi)|(.wad)|(.bin))$")
-                .OrderBy(f => Path.GetExtension(f).Equals(".bin", StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(f => Path.GetExtension(f).Equals(".cue", StringComparison.OrdinalIgnoreCase))
+                .ThenBy(f => Path.GetExtension(f).Equals(".bin", StringComparison.OrdinalIgnoreCase)))
             {
                 var filename = Path.GetFileName(romPath);
 

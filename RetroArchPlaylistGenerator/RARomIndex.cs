@@ -16,6 +16,8 @@ namespace RetroArchPlaylistGenerator
     public class RARomIndex : IDisposable
     {
         private const string IndexLocation = @".\Index\Roms";
+        private const string NameSimplificationRegex = @"[^a-z0-9 \(\)]";
+        private const string CamelCaseSplitRegex = @"(?<=[A-Z])(?=[A-Z][a-z])|(?<=[^A-Z])(?=[A-Z])|(?<=[A-Za-z])(?=[^A-Za-z])";
 
         private StandardAnalyzer _analyzer;
         private FSDirectory _indexDir;
@@ -46,7 +48,10 @@ namespace RetroArchPlaylistGenerator
                 foreach (var dbEntry in ParseDatabase(rdbFilePath))
                 {
                     var doc = new Document();
-                    doc.Add(new Field("Name", dbEntry.Name, Field.Store.YES, Field.Index.ANALYZED));
+                    var simplifiedName = Regex.Replace(dbEntry.Name, NameSimplificationRegex, "", RegexOptions.IgnoreCase);
+                    simplifiedName = Regex.Replace(simplifiedName, CamelCaseSplitRegex, " ", RegexOptions.IgnorePatternWhitespace);
+                    doc.Add(new Field("SimplifiedName", simplifiedName, Field.Store.YES, Field.Index.ANALYZED));
+                    doc.Add(new Field("Name", dbEntry.Name, Field.Store.YES, Field.Index.NOT_ANALYZED));
 
                     if (dbEntry.RomName != null)
                         doc.Add(new Field("RomName", dbEntry.RomName, Field.Store.YES, Field.Index.NOT_ANALYZED));
@@ -83,20 +88,21 @@ namespace RetroArchPlaylistGenerator
             var query1 = new TermQuery(new Term("RomName", romFileName));
             _searcher.Search(query1, collector);
             var hits = collector.TopDocs().ScoreDocs;
-            var docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score)).Where(h => h.Score > 1);
+            var docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), h.Score)).Where(h => h.Score > 1);
 
             if (!docs.Any())
             {
                 //If not found, match on Name.
-                var parser = new QueryParser(Version.LUCENE_30, "Name", _analyzer);
-                var query2 = parser.Parse(Regex.Replace(Path.GetFileNameWithoutExtension(romFileName),
-                    @"( \- )|[^a-z0-9'\-]", " ", RegexOptions.IgnoreCase));
+                var parser = new QueryParser(Version.LUCENE_30, "SimplifiedName", _analyzer);
+                var simplifiedName = Regex.Replace(romFileName, NameSimplificationRegex, "", RegexOptions.IgnoreCase);
+                simplifiedName = Regex.Replace(simplifiedName, CamelCaseSplitRegex, " ", RegexOptions.IgnorePatternWhitespace);
+                var query2 = parser.Parse(simplifiedName);
                 _searcher.Search(query2, collector);
                 hits = collector.TopDocs().ScoreDocs;
-                docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), Score: h.Score));
+                docs = hits.Select(h => (Doc: _searcher.Doc(h.Doc), h.Score));
             }
 
-            return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, Score: d.Score))
+            return docs.Select(d => (Name: d.Doc.GetField("Name").StringValue, d.Score))
                 .OrderByDescending(d => d.Score).ThenBy(d => d.Name).ToList();
         }
     }

@@ -48,12 +48,12 @@ namespace RetroArchPlaylistGenerator
             }
 
             var systemIndex = new RASystemIndex(options.RetroArchInstallDirectoryPath);
-            var systemName = options.SystemName ?? new DirectoryInfo(options.RomsDirectoryPath).Name;
-            systemName = SelectSystem(systemIndex, systemName);
+            var folderName = new DirectoryInfo(options.RomsDirectoryPath).Name;
+            var systemName = SelectSystem(systemIndex, options.SystemName ?? folderName);
 
             if (systemName == null)
             {
-                Console.WriteLine($"No system matches found for folder: {systemName}");
+                Console.WriteLine($"No system matches found for folder: {folderName}");
                 return;
             }
 
